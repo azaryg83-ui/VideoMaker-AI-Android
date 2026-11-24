@@ -26,7 +26,6 @@ jobs:
         uses: android-actions/setup-android@v4
         with:
           accept-android-sdk-licenses: true
-          log-accepted-android-sdk-licenses: false
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0 ndk;27.2.12479018 cmake;3.22.1'
 
       - name: Set up Gradle
@@ -44,6 +43,31 @@ jobs:
 
           echo "Project directory: $PROJECT_DIR"
           cd "$PROJECT_DIR"
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          gradle_file = Path("app/build.gradle.kts")
+          text = gradle_file.read_text()
+
+          if "compileOptions" not in text:
+              text = text.replace(
+                  "android {",
+                  """android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }""",
+                  1
+              )
+
+          gradle_file.write_text(text)
+          print("Java and Kotlin JVM targets set to 17")
+          PY
+
           gradle assembleDebug
 
       - name: Upload APK
