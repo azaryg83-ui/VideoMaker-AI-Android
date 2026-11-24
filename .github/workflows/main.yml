@@ -34,11 +34,17 @@ jobs:
 
       - name: Build APK
         run: |
-          PROJECT_DIR=$(find project -type f -name gradlew -exec dirname {} \; | head -n 1)
+          PROJECT_DIR=$(find project -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -exec dirname {} \; | head -n 1)
+
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: Gradle project not found"
+            find project -maxdepth 4 -type f
+            exit 1
+          fi
+
           echo "Project directory: $PROJECT_DIR"
           cd "$PROJECT_DIR"
-          chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
