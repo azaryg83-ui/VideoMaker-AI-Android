@@ -70,9 +70,22 @@ jobs:
 
           gradle assembleDebug
 
+      - name: Stage APK artifact (direct file)
+        run: |
+          APK=$(find project -type f -path "*/app/build/outputs/apk/debug/app-debug.apk" -print -quit)
+          if [ -z "$APK" ]; then
+            echo "ERROR: app-debug.apk not found after build"
+            find project -type f -name "*.apk" -print
+            exit 1
+          fi
+          mkdir -p artifact
+          cp "$APK" artifact/app-debug.apk
+          ls -lh artifact/app-debug.apk
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: VideoMaker-AI-debug-APK
-          path: project/**/app/build/outputs/apk/debug/*.apk
+          path: artifact/app-debug.apk
           if-no-files-found: error
+          retention-days: 30
